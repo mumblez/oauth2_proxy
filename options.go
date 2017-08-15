@@ -54,10 +54,10 @@ type Options struct {
 	BasicAuthPassword     string   `flag:"basic-auth-password" cfg:"basic_auth_password"`
 	PassAccessToken       bool     `flag:"pass-access-token" cfg:"pass_access_token"`
 	PassHostHeader        bool     `flag:"pass-host-header" cfg:"pass_host_header"`
+	PassGroupHeaders      bool     `flag:"pass-group-headers" cfg:"pass_group_headers"`
 	SkipGroupAuth         bool     `flag:"skip-group-auth" cfg:"skip_group_auth"`
 	SkipProviderButton    bool     `flag:"skip-provider-button" cfg:"skip_provider_button"`
 	PassUserHeaders       bool     `flag:"pass-user-headers" cfg:"pass_user_headers"`
-	PassGroupHeaders      bool     `flag:"pass-group-headers" cfg:"pass_group_headers"`
 	SSLInsecureSkipVerify bool     `flag:"ssl-insecure-skip-verify" cfg:"ssl_insecure_skip_verify"`
 	SetXAuthRequest       bool     `flag:"set-xauthrequest" cfg:"set_xauthrequest"`
 	SkipAuthPreflight     bool     `flag:"skip-auth-preflight" cfg:"skip_auth_preflight"`

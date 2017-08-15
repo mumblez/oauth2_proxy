@@ -149,7 +149,6 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 		return
 	}
 	// TODO - set group info here!
-	var gls string
 	gls, _ := p.fetchUserGroups(email)
 	s = &SessionState{
 		AccessToken:  jsonResponse.AccessToken,
@@ -263,13 +262,13 @@ func fetchGroupMembers(service *admin.Service, group string) ([]*admin.Member, e
 func (p *GoogleProvider) fetchUserGroups(userID string) (string, error) {
 	file, err := os.Open(p.GoogleServiceAccountJSON)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	adminService := getAdminService(p.GoogleAdminEmail, file)
 	file.Close()
 	groups, err := adminService.Groups.List().UserKey(userID).Do()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	var groupList []string
 	for _, grp := range groups.Groups {
