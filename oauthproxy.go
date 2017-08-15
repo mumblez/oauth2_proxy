@@ -21,6 +21,7 @@ import (
 
 const SignatureHeader = "GAP-Signature"
 
+// TODO - add X-Forwarded-Groups
 var SignatureHeaders []string = []string{
 	"Content-Length",
 	"Content-Md5",
@@ -28,12 +29,14 @@ var SignatureHeaders []string = []string{
 	"Date",
 	"Authorization",
 	"X-Forwarded-User",
+	"X-Forwarded-Groups",
 	"X-Forwarded-Email",
 	"X-Forwarded-Access-Token",
 	"Cookie",
 	"Gap-Auth",
 }
 
+// TODO - add PassGroupHeaders and SkipGroupAuth
 type OAuthProxy struct {
 	CookieSeed     string
 	CookieName     string
@@ -64,6 +67,8 @@ type OAuthProxy struct {
 	PassBasicAuth       bool
 	SkipProviderButton  bool
 	PassUserHeaders     bool
+	PassGroupHeaders    bool
+	SkipGroupAuth       bool
 	BasicAuthPassword   string
 	PassAccessToken     bool
 	CookieCipher        *cookie.Cipher
@@ -175,6 +180,7 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 		}
 	}
 
+	// TODO - add PassGroupHeaders and modify opts type in options.go
 	return &OAuthProxy{
 		CookieName:     opts.CookieName,
 		CSRFCookieName: fmt.Sprintf("%v_%v", opts.CookieName, "csrf"),
@@ -204,6 +210,8 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 		SetXAuthRequest:    opts.SetXAuthRequest,
 		PassBasicAuth:      opts.PassBasicAuth,
 		PassUserHeaders:    opts.PassUserHeaders,
+		PassGroupHeaders:   opts.PassGroupHeaders,
+		SkipGroupAuth:      opts.SkipGroupAuth,
 		BasicAuthPassword:  opts.BasicAuthPassword,
 		PassAccessToken:    opts.PassAccessToken,
 		SkipProviderButton: opts.SkipProviderButton,
@@ -248,6 +256,7 @@ func (p *OAuthProxy) redeemCode(host, code string) (s *providers.SessionState, e
 	if s.Email == "" {
 		s.Email, err = p.provider.GetEmailAddress(s)
 	}
+
 	return
 }
 
@@ -553,6 +562,8 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// set cookie, or deny
+	// TODO - set group information and amend logic if SkipGroupAuth
+	// ValidateGroup will gate if SkipGroupAuth and return true!
 	if p.Validator(session.Email) && p.provider.ValidateGroup(session.Email) {
 		log.Printf("%s authentication complete %s", remoteAddr, session)
 		err := p.SaveSession(rw, req, session)
@@ -669,6 +680,14 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 			req.Header["X-Forwarded-Email"] = []string{session.Email}
 		}
 	}
+
+	// TODO - PassGroupHeaders and SkipGroupAuth
+	if p.PassGroupHeaders {
+		if session.Email != "" {
+			req.Header["X-Forwarded-Groups"] = []string{session.Groups}
+		}
+	}
+
 	if p.PassUserHeaders {
 		req.Header["X-Forwarded-User"] = []string{session.User}
 		if session.Email != "" {

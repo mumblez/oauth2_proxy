@@ -9,12 +9,14 @@ import (
 	"github.com/bitly/oauth2_proxy/cookie"
 )
 
+// TODO - add group info (base64 encoded?)
 type SessionState struct {
 	AccessToken  string
 	ExpiresOn    time.Time
 	RefreshToken string
 	Email        string
 	User         string
+	Groups       string
 }
 
 func (s *SessionState) IsExpired() bool {

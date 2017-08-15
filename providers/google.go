@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -147,11 +148,15 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 	if err != nil {
 		return
 	}
+	// TODO - set group info here!
+	var gls string
+	gls, _ := p.fetchUserGroups(email)
 	s = &SessionState{
 		AccessToken:  jsonResponse.AccessToken,
 		ExpiresOn:    time.Now().Add(time.Duration(jsonResponse.ExpiresIn) * time.Second).Truncate(time.Second),
 		RefreshToken: jsonResponse.RefreshToken,
 		Email:        email,
+		Groups:       gls,
 	}
 	return
 }
@@ -163,6 +168,10 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 func (p *GoogleProvider) SetGroupRestriction(groups []string, adminEmail string, credentialsReader io.Reader) {
 	adminService := getAdminService(adminEmail, credentialsReader)
 	p.GroupValidator = func(email string) bool {
+		// TODO - gets called directly too so we need to gate
+		if p.GoogleSkipGroupAuth {
+			return true
+		}
 		return userInGroup(adminService, groups, email)
 	}
 }
@@ -250,6 +259,25 @@ func fetchGroupMembers(service *admin.Service, group string) ([]*admin.Member, e
 	return members, nil
 }
 
+// TODO - generate groups the user is a member of in a header friendly format
+func (p *GoogleProvider) fetchUserGroups(userID string) (string, error) {
+	file, err := os.Open(p.GoogleServiceAccountJSON)
+	if err != nil {
+		return nil, err
+	}
+	adminService := getAdminService(p.GoogleAdminEmail, file)
+	file.Close()
+	groups, err := adminService.Groups.List().UserKey(userID).Do()
+	if err != nil {
+		return nil, err
+	}
+	var groupList []string
+	for _, grp := range groups.Groups {
+		groupList = append(groupList, strings.Split(grp.Email, "@")[0])
+	}
+	return strings.Join(groupList, ":"), nil
+}
+
 // ValidateGroup validates that the provided email exists in the configured Google
 // group(s).
 func (p *GoogleProvider) ValidateGroup(email string) bool {
@@ -267,7 +295,8 @@ func (p *GoogleProvider) RefreshSessionIfNeeded(s *SessionState) (bool, error) {
 	}
 
 	// re-check that the user is in the proper google group(s)
-	if !p.ValidateGroup(s.Email) {
+	// TODO - make optional or refresh the header group list
+	if !p.GoogleSkipGroupAuth && !p.ValidateGroup(s.Email) {
 		return false, fmt.Errorf("%s is no longer in the group(s)", s.Email)
 	}
 

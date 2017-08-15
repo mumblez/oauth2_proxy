@@ -54,8 +54,10 @@ type Options struct {
 	BasicAuthPassword     string   `flag:"basic-auth-password" cfg:"basic_auth_password"`
 	PassAccessToken       bool     `flag:"pass-access-token" cfg:"pass_access_token"`
 	PassHostHeader        bool     `flag:"pass-host-header" cfg:"pass_host_header"`
+	SkipGroupAuth         bool     `flag:"skip-group-auth" cfg:"skip_group_auth"`
 	SkipProviderButton    bool     `flag:"skip-provider-button" cfg:"skip_provider_button"`
 	PassUserHeaders       bool     `flag:"pass-user-headers" cfg:"pass_user_headers"`
+	PassGroupHeaders      bool     `flag:"pass-group-headers" cfg:"pass_group_headers"`
 	SSLInsecureSkipVerify bool     `flag:"ssl-insecure-skip-verify" cfg:"ssl_insecure_skip_verify"`
 	SetXAuthRequest       bool     `flag:"set-xauthrequest" cfg:"set_xauthrequest"`
 	SkipAuthPreflight     bool     `flag:"skip-auth-preflight" cfg:"skip_auth_preflight"`
@@ -103,6 +105,7 @@ func NewOptions() *Options {
 		SkipAuthPreflight:   false,
 		PassBasicAuth:       true,
 		PassUserHeaders:     true,
+		PassGroupHeaders:    true,
 		PassAccessToken:     false,
 		PassHostHeader:      true,
 		ApprovalPrompt:      "force",
@@ -195,15 +198,27 @@ func (o *Options) Validate() error {
 			o.CookieExpire.String()))
 	}
 
-	if len(o.GoogleGroups) > 0 || o.GoogleAdminEmail != "" || o.GoogleServiceAccountJSON != "" {
-		if len(o.GoogleGroups) < 1 {
-			msgs = append(msgs, "missing setting: google-group")
+	// TODO - update logic, no need to check GoogleGroups count if we're skipping
+	if !o.SkipGroupAuth {
+		if len(o.GoogleGroups) > 0 || o.GoogleAdminEmail != "" || o.GoogleServiceAccountJSON != "" {
+			if len(o.GoogleGroups) < 1 {
+				msgs = append(msgs, "missing setting for group auth: google-group")
+			}
+			if o.GoogleAdminEmail == "" {
+				msgs = append(msgs, "missing setting for group auth: google-admin-email")
+			}
+			if o.GoogleServiceAccountJSON == "" {
+				msgs = append(msgs, "missing setting for group auth: google-service-account-json")
+			}
 		}
+	}
+
+	if o.PassGroupHeaders {
 		if o.GoogleAdminEmail == "" {
-			msgs = append(msgs, "missing setting: google-admin-email")
+			msgs = append(msgs, "missing setting for passing group headers: google-admin-email")
 		}
 		if o.GoogleServiceAccountJSON == "" {
-			msgs = append(msgs, "missing setting: google-service-account-json")
+			msgs = append(msgs, "missing setting for passing group headers: google-service-account-json")
 		}
 	}
 
@@ -244,12 +259,19 @@ func parseProviderInfo(o *Options, msgs []string) []string {
 	case *providers.GitHubProvider:
 		p.SetOrgTeam(o.GitHubOrg, o.GitHubTeam)
 	case *providers.GoogleProvider:
+		p.GoogleAdminEmail = o.GoogleAdminEmail
+		p.GoogleSkipGroupAuth = o.SkipGroupAuth
 		if o.GoogleServiceAccountJSON != "" {
+			// hmmm, who closes this?
 			file, err := os.Open(o.GoogleServiceAccountJSON)
 			if err != nil {
 				msgs = append(msgs, "invalid Google credentials file: "+o.GoogleServiceAccountJSON)
 			} else {
-				p.SetGroupRestriction(o.GoogleGroups, o.GoogleAdminEmail, file)
+				p.GoogleServiceAccountJSON = o.GoogleServiceAccountJSON
+				// TODO - gate logic here for validating Groups
+				if !o.SkipGroupAuth {
+					p.SetGroupRestriction(o.GoogleGroups, o.GoogleAdminEmail, file)
+				}
 			}
 		}
 	}
