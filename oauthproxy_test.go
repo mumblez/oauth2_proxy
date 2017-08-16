@@ -3,9 +3,6 @@ package main
 import (
 	"crypto"
 	"encoding/base64"
-	"github.com/18F/hmacauth"
-	"github.com/bitly/oauth2_proxy/providers"
-	"github.com/bmizerany/assert"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,6 +14,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/18F/hmacauth"
+	"github.com/bmizerany/assert"
+	"github.com/mumblez/oauth2_proxy/providers"
 )
 
 func init() {

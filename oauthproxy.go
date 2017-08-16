@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/18F/hmacauth"
-	"github.com/bitly/oauth2_proxy/cookie"
-	"github.com/bitly/oauth2_proxy/providers"
+	"github.com/mumblez/oauth2_proxy/cookie"
+	"github.com/mumblez/oauth2_proxy/providers"
 )
 
 const SignatureHeader = "GAP-Signature"
@@ -249,6 +249,8 @@ func (p *OAuthProxy) redeemCode(host, code string) (s *providers.SessionState, e
 	}
 	redirectURI := p.GetRedirectURI(host)
 	s, err = p.provider.Redeem(redirectURI, code)
+	// DEBUG
+	fmt.Printf("==== session  = %+v\n", s)
 	if err != nil {
 		return
 	}
@@ -566,6 +568,7 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 	// ValidateGroup will gate if SkipGroupAuth and return true!
 	if p.Validator(session.Email) && p.provider.ValidateGroup(session.Email) {
 		log.Printf("%s authentication complete %s", remoteAddr, session)
+		// TODO - session.Group is missing, add from here?
 		err := p.SaveSession(rw, req, session)
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
@@ -680,6 +683,11 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 			req.Header["X-Forwarded-Email"] = []string{session.Email}
 		}
 	}
+
+	// TODO - session.Groups currently blank!!!
+	//fmt.Printf("X-Forwarded-groups = %+v\n", session.Groups)
+	// missing session.Groups field
+	fmt.Printf("session = %+v\n", session)
 
 	// TODO - PassGroupHeaders and SkipGroupAuth
 	if p.PassGroupHeaders {

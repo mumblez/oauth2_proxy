@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/18F/hmacauth"
-	"github.com/bitly/oauth2_proxy/providers"
+	"github.com/mumblez/oauth2_proxy/providers"
 )
 
 // Configuration Options that can be set by Command Line Flag, or Config File
@@ -107,6 +107,7 @@ func NewOptions() *Options {
 		PassBasicAuth:       true,
 		PassUserHeaders:     true,
 		PassGroupHeaders:    true,
+		SkipGroupAuth:       true,
 		PassAccessToken:     false,
 		PassHostHeader:      true,
 		ApprovalPrompt:      "force",

@@ -16,6 +16,7 @@ type HtpasswdFile struct {
 	Users map[string]string
 }
 
+// NewHtpasswdFromFile ...
 func NewHtpasswdFromFile(path string) (*HtpasswdFile, error) {
 	r, err := os.Open(path)
 	if err != nil {
@@ -25,6 +26,7 @@ func NewHtpasswdFromFile(path string) (*HtpasswdFile, error) {
 	return NewHtpasswd(r)
 }
 
+// NewHtpasswd ...
 func NewHtpasswd(file io.Reader) (*HtpasswdFile, error) {
 	csv_reader := csv.NewReader(file)
 	csv_reader.Comma = ':'
@@ -42,6 +44,7 @@ func NewHtpasswd(file io.Reader) (*HtpasswdFile, error) {
 	return h, nil
 }
 
+// Validate ...
 func (h *HtpasswdFile) Validate(user string, password string) bool {
 	realPassword, exists := h.Users[user]
 	if !exists {

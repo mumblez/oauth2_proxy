@@ -6,8 +6,10 @@ import (
 	"strings"
 )
 
+// EnvOptions ...
 type EnvOptions map[string]interface{}
 
+// LoadEnvForStruct ...
 func (cfg EnvOptions) LoadEnvForStruct(options interface{}) {
 	val := reflect.ValueOf(options).Elem()
 	typ := val.Type()

@@ -149,13 +149,13 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 		return
 	}
 	// TODO - set group info here!
-	gls, _ := p.fetchUserGroups(email)
+	// DEBUG - Groups is not getting filled in
+	//gls, _ := p.fetchUserGroups(email)
 	s = &SessionState{
 		AccessToken:  jsonResponse.AccessToken,
 		ExpiresOn:    time.Now().Add(time.Duration(jsonResponse.ExpiresIn) * time.Second).Truncate(time.Second),
 		RefreshToken: jsonResponse.RefreshToken,
 		Email:        email,
-		Groups:       gls,
 	}
 	return
 }
@@ -180,13 +180,18 @@ func getAdminService(adminEmail string, credentialsReader io.Reader) *admin.Serv
 	if err != nil {
 		log.Fatal("can't read Google credentials file:", err)
 	}
+	// TODO - DEBUG
+	// prod
 	conf, err := google.JWTConfigFromJSON(data, admin.AdminDirectoryUserReadonlyScope, admin.AdminDirectoryGroupReadonlyScope)
+	// debug - but need to gen and save access token interactively - add token functions from examples
+	// conf, err := google.ConfigFromJSON(data, admin.AdminDirectoryUserReadonlyScope, admin.AdminDirectoryGroupReadonlyScope)
 	if err != nil {
 		log.Fatal("can't load Google credentials file:", err)
 	}
-	conf.Subject = adminEmail
 
 	client := conf.Client(oauth2.NoContext)
+	conf.Subject = adminEmail
+
 	adminService, err := admin.New(client)
 	if err != nil {
 		log.Fatal(err)
@@ -274,7 +279,9 @@ func (p *GoogleProvider) fetchUserGroups(userID string) (string, error) {
 	for _, grp := range groups.Groups {
 		groupList = append(groupList, strings.Split(grp.Email, "@")[0])
 	}
-	return strings.Join(groupList, ":"), nil
+	// TODO - DEBUG
+	log.Printf("=== group headers = %+v\n", groupList)
+	return strings.Join(groupList, ","), nil
 }
 
 // ValidateGroup validates that the provided email exists in the configured Google
