@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bitly/oauth2_proxy/cookie"
+	"github.com/mumblez/oauth2_proxy/cookie"
 )
 
 // TODO - add group info (base64 encoded?)
