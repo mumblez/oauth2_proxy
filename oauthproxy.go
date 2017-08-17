@@ -249,7 +249,7 @@ func (p *OAuthProxy) redeemCode(host, code string) (s *providers.SessionState, e
 	}
 	redirectURI := p.GetRedirectURI(host)
 	s, err = p.provider.Redeem(redirectURI, code)
-	// DEBUG
+	// DEBUG - no s.Group !
 	fmt.Printf("==== session  = %+v\n", s)
 	if err != nil {
 		return

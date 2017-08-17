@@ -150,12 +150,13 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 	}
 	// TODO - set group info here!
 	// DEBUG - Groups is not getting filled in
-	//gls, _ := p.fetchUserGroups(email)
+	gls, _ := p.fetchUserGroups(email)
 	s = &SessionState{
 		AccessToken:  jsonResponse.AccessToken,
 		ExpiresOn:    time.Now().Add(time.Duration(jsonResponse.ExpiresIn) * time.Second).Truncate(time.Second),
 		RefreshToken: jsonResponse.RefreshToken,
 		Email:        email,
+		Groups:       gls,
 	}
 	return
 }
@@ -269,6 +270,7 @@ func (p *GoogleProvider) fetchUserGroups(userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Println("=== getAdminService ... ")
 	adminService := getAdminService(p.GoogleAdminEmail, file)
 	file.Close()
 	groups, err := adminService.Groups.List().UserKey(userID).Do()
