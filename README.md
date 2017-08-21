@@ -77,6 +77,12 @@ and the user will be checked against all the provided groups.
 
 Note: The user is checked against the group members list on initial authentication and every time the token is refreshed ( about once an hour ).
 
+#### Pass google groups the user is a member off as headers to allow handling by upstream, e.g. rundeck aclpolicies against groups in preauthenticated mode
+
+1. enable `skip-group-auth` # optional, if you leave off, then only valid group members can authenticate
+2. enable `pass-group-headers` # in addition to authenticating the user, we query their group memberships and pass this allong as `X-Forwarded-Groups` header (comma delimited) to allow upstream to handle authorisation.
+
+
 ### Azure Auth Provider
 
 1. [Add an application](https://azure.microsoft.com/en-us/documentation/articles/active-directory-integrating-applications/) to your Azure Active Directory tenant.
@@ -106,7 +112,7 @@ If you are using GitHub enterprise, make sure you set the following to the appro
     -login-url="http(s)://<enterprise github host>/login/oauth/authorize"
     -redeem-url="http(s)://<enterprise github host>/login/oauth/access_token"
     -validate-url="http(s)://<enterprise github host>/api/v3"
-
+ ups
 ### GitLab Auth Provider
 
 Whether you are using GitLab.com or self-hosting GitLab, follow [these steps to add an application](http://doc.gitlab.com/ce/integration/oauth_provider.html)
@@ -188,6 +194,7 @@ Usage of oauth2_proxy:
   -pass-basic-auth: pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
   -pass-host-header: pass the request Host Header to upstream (default true)
   -pass-user-headers: pass X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
+  -pass-group-headers: pass X-Forwarded-Groups information to upstream (default true)
   -profile-url string: Profile access endpoint
   -provider string: OAuth provider (default "google")
   -proxy-prefix string: the url root path that this proxy should be nested under (e.g. /<oauth2>/sign_in) (default "/oauth2")
@@ -201,6 +208,7 @@ Usage of oauth2_proxy:
   -skip-auth-preflight: will skip authentication for OPTIONS requests
   -skip-auth-regex value: bypass authentication for requests path's that match (may be given multiple times)
   -skip-provider-button: will skip sign-in-page to directly reach the next step: oauth/start
+  -skip-group-auth: skip google group authentication (use when you only want to pass-group-headers upstream to allow upstream to handle authorisation)
   -ssl-insecure-skip-verify: skip validation of certificates presented when using HTTPS
   -tls-cert string: path to certificate file
   -tls-key string: path to private key file
