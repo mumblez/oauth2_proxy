@@ -9,7 +9,6 @@ import (
 	"github.com/mumblez/oauth2_proxy/cookie"
 )
 
-// TODO - add group info (base64 encoded?)
 type SessionState struct {
 	AccessToken  string
 	ExpiresOn    time.Time
@@ -36,6 +35,9 @@ func (s *SessionState) String() string {
 	}
 	if s.RefreshToken != "" {
 		o += " refresh_token:true"
+	}
+	if s.Groups != "" {
+		o += fmt.Sprintf(" groups: %v", s.Groups)
 	}
 	return o + "}"
 }
@@ -74,7 +76,7 @@ func (s *SessionState) EncryptedString(c *cookie.Cipher) (string, error) {
 			return "", err
 		}
 	}
-	return fmt.Sprintf("%s|%s|%d|%s", s.userOrEmail(), a, s.ExpiresOn.Unix(), r), nil
+	return fmt.Sprintf("%s|%s|%d|%s|%s", s.userOrEmail(), a, s.ExpiresOn.Unix(), r, s.Groups), nil
 }
 
 func DecodeSessionState(v string, c *cookie.Cipher) (s *SessionState, err error) {
@@ -87,8 +89,8 @@ func DecodeSessionState(v string, c *cookie.Cipher) (s *SessionState, err error)
 		return &SessionState{User: v}, nil
 	}
 
-	if len(chunks) != 4 {
-		err = fmt.Errorf("invalid number of fields (got %d expected 4)", len(chunks))
+	if len(chunks) != 5 {
+		err = fmt.Errorf("invalid number of fields (got %d expected 5)", len(chunks))
 		return
 	}
 
@@ -108,6 +110,7 @@ func DecodeSessionState(v string, c *cookie.Cipher) (s *SessionState, err error)
 	if u := chunks[0]; strings.Contains(u, "@") {
 		s.Email = u
 		s.User = strings.Split(u, "@")[0]
+		s.Groups = chunks[4]
 	} else {
 		s.User = u
 	}

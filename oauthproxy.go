@@ -21,7 +21,6 @@ import (
 
 const SignatureHeader = "GAP-Signature"
 
-// TODO - add X-Forwarded-Groups
 var SignatureHeaders []string = []string{
 	"Content-Length",
 	"Content-Md5",
@@ -36,7 +35,6 @@ var SignatureHeaders []string = []string{
 	"Gap-Auth",
 }
 
-// TODO - add PassGroupHeaders and SkipGroupAuth
 type OAuthProxy struct {
 	CookieSeed     string
 	CookieName     string
@@ -180,7 +178,6 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 		}
 	}
 
-	// TODO - add PassGroupHeaders and modify opts type in options.go
 	return &OAuthProxy{
 		CookieName:     opts.CookieName,
 		CSRFCookieName: fmt.Sprintf("%v_%v", opts.CookieName, "csrf"),
@@ -250,7 +247,7 @@ func (p *OAuthProxy) redeemCode(host, code string) (s *providers.SessionState, e
 	redirectURI := p.GetRedirectURI(host)
 	s, err = p.provider.Redeem(redirectURI, code)
 	// DEBUG - no s.Group !
-	fmt.Printf("==== session  = %+v\n", s)
+	fmt.Printf("==== session.Groups  = %+v\n", s.Groups)
 	if err != nil {
 		return
 	}
@@ -563,12 +560,8 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 		redirect = "/"
 	}
 
-	// set cookie, or deny
-	// TODO - set group information and amend logic if SkipGroupAuth
-	// ValidateGroup will gate if SkipGroupAuth and return true!
 	if p.Validator(session.Email) && p.provider.ValidateGroup(session.Email) {
 		log.Printf("%s authentication complete %s", remoteAddr, session)
-		// TODO - session.Group is missing, add from here?
 		err := p.SaveSession(rw, req, session)
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
@@ -684,12 +677,6 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		}
 	}
 
-	// TODO - session.Groups currently blank!!!
-	//fmt.Printf("X-Forwarded-groups = %+v\n", session.Groups)
-	// missing session.Groups field
-	fmt.Printf("session = %+v\n", session)
-
-	// TODO - PassGroupHeaders and SkipGroupAuth
 	if p.PassGroupHeaders {
 		if session.Email != "" {
 			req.Header["X-Forwarded-Groups"] = []string{session.Groups}

@@ -4,7 +4,6 @@ import (
 	"net/url"
 )
 
-// TODO - add extra fields to capture google stuff
 type ProviderData struct {
 	ProviderName             string
 	ClientID                 string
