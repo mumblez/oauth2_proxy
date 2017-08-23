@@ -148,13 +148,11 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 	if err != nil {
 		return
 	}
-	// TODO - set group info here!
-	// DEBUG - Groups is not getting filled in
+
 	gls, err := p.fetchUserGroups(email)
 	if err != nil {
-		fmt.Printf("====== error fetching group info = %+v\n", err)
+		return
 	}
-	fmt.Printf("gls = %+v\n", gls)
 	s = &SessionState{
 		AccessToken:  jsonResponse.AccessToken,
 		ExpiresOn:    time.Now().Add(time.Duration(jsonResponse.ExpiresIn) * time.Second).Truncate(time.Second),
@@ -172,7 +170,6 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 func (p *GoogleProvider) SetGroupRestriction(groups []string, adminEmail string, credentialsReader io.Reader) {
 	adminService := getAdminService(adminEmail, credentialsReader)
 	p.GroupValidator = func(email string) bool {
-		// TODO - gets called directly too so we need to gate
 		if p.GoogleSkipGroupAuth {
 			return true
 		}
@@ -185,7 +182,6 @@ func getAdminService(adminEmail string, credentialsReader io.Reader) *admin.Serv
 	if err != nil {
 		log.Fatal("can't read Google credentials file:", err)
 	}
-	// TODO - DEBUG
 	// prod
 	conf, err := google.JWTConfigFromJSON(data, admin.AdminDirectoryUserReadonlyScope, admin.AdminDirectoryGroupReadonlyScope)
 	// debug - but need to gen and save access token interactively - add token functions from examples
@@ -268,33 +264,22 @@ func fetchGroupMembers(service *admin.Service, group string) ([]*admin.Member, e
 	return members, nil
 }
 
-// TODO - generate groups the user is a member of in a header friendly format
+// Generate and return a list of groups the user is a member off!
 func (p *GoogleProvider) fetchUserGroups(userID string) (string, error) {
 	file, err := os.Open(p.GoogleServiceAccountJSON)
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("====== getAdminService ... ")
 	adminService := getAdminService(p.GoogleAdminEmail, file)
-	fmt.Println("====== prior file close ... ")
 	file.Close()
-	fmt.Println("====== after file close ... ")
-	fmt.Println("====== after file close ..., userID: ", userID)
 	groups, err := adminService.Groups.List().UserKey(userID).Do()
-
-	fmt.Println("====== after admin group list ... ")
-	fmt.Printf("groups = %+v\n", groups)
 	if err != nil {
 		return "", err
 	}
-
-	fmt.Println("====== Iterating groups...")
 	var groupList []string
 	for _, grp := range groups.Groups {
 		groupList = append(groupList, strings.Split(grp.Email, "@")[0])
 	}
-	// TODO - DEBUG
-	fmt.Printf("=== group headers = %+v\n", groupList)
 	return strings.Join(groupList, ","), nil
 }
 
@@ -315,7 +300,6 @@ func (p *GoogleProvider) RefreshSessionIfNeeded(s *SessionState) (bool, error) {
 	}
 
 	// re-check that the user is in the proper google group(s)
-	// TODO - make optional or refresh the header group list
 	if !p.GoogleSkipGroupAuth && !p.ValidateGroup(s.Email) {
 		return false, fmt.Errorf("%s is no longer in the group(s)", s.Email)
 	}
