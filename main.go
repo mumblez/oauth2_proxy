@@ -25,7 +25,6 @@ func main() {
 	config := flagSet.String("config", "", "path to config file")
 	showVersion := flagSet.Bool("version", false, "print version string")
 
-	// TODO - add skip-group-auth and pass-group-headers
 	flagSet.String("http-address", "127.0.0.1:4180", "[http://]<addr>:<port> or unix://<path> to listen on for HTTP clients")
 	flagSet.String("https-address", ":443", "<addr>:<port> to listen on for HTTPS clients")
 	flagSet.String("tls-cert", "", "path to certificate file")

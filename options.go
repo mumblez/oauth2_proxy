@@ -262,7 +262,6 @@ func parseProviderInfo(o *Options, msgs []string) []string {
 		p.GoogleAdminEmail = o.GoogleAdminEmail
 		p.GoogleSkipGroupAuth = o.SkipGroupAuth
 		if o.GoogleServiceAccountJSON != "" {
-			// hmmm, who closes this?
 			file, err := os.Open(o.GoogleServiceAccountJSON)
 			if err != nil {
 				msgs = append(msgs, "invalid Google credentials file: "+o.GoogleServiceAccountJSON)
