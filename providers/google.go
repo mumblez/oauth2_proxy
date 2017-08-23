@@ -150,7 +150,11 @@ func (p *GoogleProvider) Redeem(redirectURL, code string) (s *SessionState, err 
 	}
 	// TODO - set group info here!
 	// DEBUG - Groups is not getting filled in
-	gls, _ := p.fetchUserGroups(email)
+	gls, err := p.fetchUserGroups(email)
+	if err != nil {
+		fmt.Printf("====== error fetching group info = %+v\n", err)
+	}
+	fmt.Printf("gls = %+v\n", gls)
 	s = &SessionState{
 		AccessToken:  jsonResponse.AccessToken,
 		ExpiresOn:    time.Now().Add(time.Duration(jsonResponse.ExpiresIn) * time.Second).Truncate(time.Second),
@@ -270,19 +274,27 @@ func (p *GoogleProvider) fetchUserGroups(userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Println("=== getAdminService ... ")
+	fmt.Println("====== getAdminService ... ")
 	adminService := getAdminService(p.GoogleAdminEmail, file)
+	fmt.Println("====== prior file close ... ")
 	file.Close()
+	fmt.Println("====== after file close ... ")
+	fmt.Println("====== after file close ..., userID: ", userID)
 	groups, err := adminService.Groups.List().UserKey(userID).Do()
+
+	fmt.Println("====== after admin group list ... ")
+	fmt.Printf("groups = %+v\n", groups)
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println("====== Iterating groups...")
 	var groupList []string
 	for _, grp := range groups.Groups {
 		groupList = append(groupList, strings.Split(grp.Email, "@")[0])
 	}
 	// TODO - DEBUG
-	log.Printf("=== group headers = %+v\n", groupList)
+	fmt.Printf("=== group headers = %+v\n", groupList)
 	return strings.Join(groupList, ","), nil
 }
 
