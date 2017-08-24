@@ -1,0 +1,7 @@
+FROM golang:1.8.3-alpine
+COPY oauth2_proxy /oauth2_proxy
+CMD mkdir /etc/oauth
+COPY oauth2_proxy.cfg /etc/oauth/
+COPY inf-oauth.json /etc/oauth/
+EXPOSE 4128
+ENTRYPOINT ["/oauth2_proxy", "-config", "/etc/oauth/oauth2_proxy.cfg"]

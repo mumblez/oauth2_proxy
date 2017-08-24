@@ -28,3 +28,6 @@ dist
 
 # Editor swap/temp files
 .*.swp
+
+oauth2_proxy.cfg
+inf-oauth.json
